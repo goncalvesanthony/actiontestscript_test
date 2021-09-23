@@ -3,7 +3,7 @@ image: rvancea/maven-chrome-jdk8:latest
 build:
   stage: build
   script: 
-    - mvn compile
+    - mvn package
 
 test:
   stage: test
