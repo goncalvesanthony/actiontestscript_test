@@ -1,0 +1,149 @@
+/*
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+ */
+
+package com.ats.generator.variables.transform;
+
+import com.ats.executor.ActionTestScript;
+import org.apache.commons.lang3.StringUtils;
+
+import java.time.DateTimeException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.StringJoiner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class DateTransformer extends Transformer {
+
+	private static final DateTimeFormatter STANDARD_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+	private static final Pattern PATTERN_DAY_TRANSFORM = Pattern.compile("(-?\\d+)([ymd])");
+
+	private int year = 0;
+	private int month = 0;
+	private int day = 0;
+
+	private String formatter = "";
+
+	public DateTransformer() {} // Needed for serialization
+
+	public DateTransformer(String ... data) {
+		for(String item : data){
+			final Matcher dataMatcher = PATTERN_DAY_TRANSFORM.matcher(item);
+			if(dataMatcher.find()){
+				if("y".equals(dataMatcher.group(2))){
+					setYear(getInt(dataMatcher.group(1)));
+				}else if("m".equals(dataMatcher.group(2))){
+					setMonth(getInt(dataMatcher.group(1)));
+				}else if("d".equals(dataMatcher.group(2))){
+					setDay(getInt(dataMatcher.group(1)));
+				}
+			}else if(StringUtils.isNoneEmpty(item)) {
+				setFormatter(item);
+			}
+		}
+	}
+
+	public static String getTodayValue() {
+		return LocalDate.now().format(STANDARD_FORMATTER);
+	}
+
+	@Override
+	public String getJavaCode() {
+
+		final StringJoiner joiner = new StringJoiner(", ");
+
+		if(StringUtils.isNotEmpty(formatter)) {
+			joiner.add("\"" + formatter + "\"");
+		}
+
+		if(year != 0) {
+			joiner.add("\"" + year + "y\"");
+		}
+
+		if(month != 0) {
+			joiner.add("\"" + month + "m\"");
+		}
+
+		if(day != 0) {
+			joiner.add("\"" + day + "d\"");
+		}
+
+		return ActionTestScript.JAVA_DATE_FUNCTION_NAME + "(" + joiner.toString() + ")";
+	}
+
+	@Override
+	public String format(String data) {
+		
+		String[] datearray = data.split("/");
+		if(datearray.length != 3) {
+			datearray = data.split("-");
+		}
+
+		if(datearray.length == 3) {
+			try {
+				LocalDate localDate = LocalDate.of(Integer.parseInt(datearray[0]), Integer.parseInt(datearray[1]), Integer.parseInt(datearray[2]));
+				localDate = localDate.plusYears(year).plusMonths(month).plusDays(day);
+
+				if(StringUtils.isNotEmpty(formatter)) {
+					return localDate.format(DateTimeFormatter.ofPattern(formatter));
+				}
+				return localDate.format(STANDARD_FORMATTER);
+
+			} catch (DateTimeException | IllegalArgumentException e) {}
+		}
+		return "#Date parse error : " + data + "#"; 
+	}
+
+	//--------------------------------------------------------
+	// getters and setters for serialization
+	//--------------------------------------------------------
+
+	public int getYear() {
+		return year;
+	}
+
+	public void setYear(int year) {
+		this.year = year;
+	}
+
+	public int getMonth() {
+		return month;
+	}
+
+	public void setMonth(int month) {
+		this.month = month;
+	}
+
+	public int getDay() {
+		return day;
+	}
+
+	public void setDay(int day) {
+		this.day = day;
+	}
+
+	public String getFormatter() {
+		return formatter;
+	}
+
+	public void setFormatter(String format) {
+		this.formatter = format;
+	}
+}
