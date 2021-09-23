@@ -53,7 +53,7 @@
 		<url>https://github.com/pierrehub2b/actiontestscript.git</url>
 	</scm>
 
-	<distributionManagement>
+	<!--<distributionManagement>
 		<snapshotRepository>
 			<id>OSSRH-37505</id>
 			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
@@ -62,7 +62,24 @@
 			<id>OSSRH-37505</id>
 			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 		</repository>
-	</distributionManagement>
+	</distributionManagement> -->
+
+	<repositories>
+		<repository>
+		  <id>gitlab-maven</id>
+		  <url>${env.CI_API_V4_URL}/projects/${env.CI_PROJECT_ID}/packages/maven</url>
+		</repository>
+	  </repositories>
+	  <distributionManagement>
+		<repository>
+		  <id>gitlab-maven</id>
+		  <url>${CI_API_V4_URL}/projects/${env.CI_PROJECT_ID}/packages/maven</url>
+		</repository>
+		<snapshotRepository>
+		  <id>gitlab-maven</id>
+		  <url>${CI_API_V4_URL}/projects/${env.CI_PROJECT_ID}/packages/maven</url>
+		</snapshotRepository>
+	  </distributionManagement>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
