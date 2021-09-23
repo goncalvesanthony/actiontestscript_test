@@ -5,7 +5,3 @@ build:
   script: 
     - mvn package
 
-test:
-  stage: test
-  script:
-    - mvn clean test
